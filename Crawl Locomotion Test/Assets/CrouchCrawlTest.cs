@@ -6,34 +6,49 @@ using Valve.VR.InteractionSystem;
 
 public class CrouchCrawlTest : MonoBehaviour
 {
+    //GameObject references
     [SerializeField] private GameObject VRCamera;
     [SerializeField] private GameObject player;
-    [SerializeField] private Rigidbody playerRB;
     [SerializeField] private GameObject rightHand;
     [SerializeField] private GameObject leftHand;
 
+    //Floats
     [SerializeField] private float speedMultiplier = 1.5f;
+    [SerializeField] private float maxSpeed = 10f;
     [SerializeField] private float crouchHeight;
 
+    //Velocity Reset Timer
     [SerializeField] private float velocityResetTime = 0.5f; //Time of inactivity until resetting the velocity to 0;
     private float timer = 0;
 
-    private Vector3 finalVelocity;
+    [SerializeField] private Vector3 finalVelocity;
 
+    //Component References
+    private Rigidbody playerRB;
+
+    //Bools
     public bool isCrouching;
+
+    //Slopes
+    [SerializeField] private float height = 0.5f;
+    [SerializeField] private float heightPadding = 0.05f;
+
+
+    private void Awake()
+    {
+        playerRB = GetComponent<Rigidbody>();
+    }
 
     public bool IsCrouching()
     {
-        //if(VRCamera.transform.position.y < crouchHeight)
-        //{
-        //    isCrouching = true;
-        //    return true;
-        //}
+        if (VRCamera.transform.localPosition.y < crouchHeight)
+        {
+            isCrouching = true;
+            return true;
+        }
 
-        //isCrouching = false;
-        //return false;
-
-        return true;
+        isCrouching = false;
+        return false;
     }
 
     private void Update()
@@ -42,8 +57,7 @@ public class CrouchCrawlTest : MonoBehaviour
         {
             StartCoroutine(CalculateNewPlayerPosition(rightHand));
         }
-         
-        if(IsCrouching() & SteamVR_Input.GetState("GrabGrip", SteamVR_Input_Sources.LeftHand, true))
+        else if(IsCrouching() & SteamVR_Input.GetState("GrabGrip", SteamVR_Input_Sources.LeftHand, true))
         {
             StartCoroutine(CalculateNewPlayerPosition(leftHand));
         }
@@ -62,9 +76,6 @@ public class CrouchCrawlTest : MonoBehaviour
 
         Vector3 diff = newHandPosition - initialHandPosition;
 
-        //apply difference in reverse to the player
-        //player.transform.position += new Vector3(-diff.x, 0, -diff.z);
-
         finalVelocity = new Vector3(-diff.x, 0, -diff.z) * speedMultiplier;
 
         timer = 0;
@@ -77,6 +88,7 @@ public class CrouchCrawlTest : MonoBehaviour
         if (timer > velocityResetTime)
         {
             finalVelocity = Vector3.zero;
+            playerRB.velocity = Vector3.zero;
         }
     }
 
@@ -87,6 +99,10 @@ public class CrouchCrawlTest : MonoBehaviour
 
     void ApplyMovement()
     {
-        playerRB.velocity = finalVelocity;
+        //Clamp min and max speed
+        finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
+        finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
+
+        playerRB.velocity += finalVelocity;
     }
 }
