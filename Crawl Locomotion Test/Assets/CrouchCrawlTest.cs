@@ -51,6 +51,8 @@ public class CrouchCrawlTest : MonoBehaviour
 
     public bool isMoving;
 
+    [Header("Ramp")]
+    public Transform rampTransform;
 
     private void Awake()
     {
@@ -137,19 +139,25 @@ public class CrouchCrawlTest : MonoBehaviour
         finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
         finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
 
-        //cc.Move(finalVelocity * speedMultiplier * Time.deltaTime);
-        //playerRB.velocity += finalVelocity;
 
-        //If player is on a slope
-        if (groundSlopeAngle > 10)
-        {
-            playerRB.velocity = -groundSlopeDir * speedMultiplier;
-        }
-        else
-        {
-            playerRB.velocity = finalVelocity * speedMultiplier;
+        playerRB.velocity = finalVelocity * speedMultiplier;
 
-        }
+
+        ////create local vector from ramp slope
+        //if (groundSlopeAngle > 20)
+        //{
+        //    finalVelocity = rampTransform.TransformVector(finalVelocity);
+
+        //    finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
+        //    finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
+
+        //    playerRB.velocity = finalVelocity * speedMultiplier;
+        //}
+        //else
+        //{
+        //    playerRB.velocity = finalVelocity * speedMultiplier;
+
+        //}
     }
 
     /// <summary>

@@ -2238,7 +2238,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 447954, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 6.613
+      value: 5.207
       objectReference: {fileID: 0}
     - target: {fileID: 447954, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2246,7 +2246,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 447954, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.626
+      value: -2.329
       objectReference: {fileID: 0}
     - target: {fileID: 447954, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2431,8 +2431,8 @@ MonoBehaviour:
   player: {fileID: 834125596}
   rightHand: {fileID: 374300377}
   leftHand: {fileID: 1068355337}
-  speedMultiplier: 50
-  maxSpeed: 10
+  speedMultiplier: 75
+  maxSpeed: 0.02
   crouchHeight: 1.75
   velocityResetTime: 0.1
   finalVelocity: {x: 0, y: 0, z: 0}
@@ -2450,6 +2450,7 @@ MonoBehaviour:
   rayOriginOffset1: {x: -0.2, y: 0, z: 0.16}
   rayOriginOffset2: {x: 0.2, y: 0, z: -0.16}
   isMoving: 0
+  rampTransform: {fileID: 1688849785}
 --- !u!136 &834125600
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -3866,7 +3867,7 @@ GameObject:
   - component: {fileID: 1688849782}
   - component: {fileID: 1688849781}
   m_Layer: 3
-  m_Name: Cube (1)
+  m_Name: Ramp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3879,7 +3880,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1688849780}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 87121121f55bcb640a4aec30ff21261e, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
