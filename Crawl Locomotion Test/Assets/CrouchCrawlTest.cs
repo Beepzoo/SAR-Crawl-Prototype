@@ -13,14 +13,16 @@ public class CrouchCrawlTest : MonoBehaviour
     [SerializeField] private GameObject rightHand;
     [SerializeField] private GameObject leftHand;
 
+    //Ramp friction material
+    [SerializeField] private PhysicMaterial slider;
+    private float savedDynamicFrictionValue;
+    private float savedStaticFrictionValue;
+
     //Floats
     [SerializeField] private float speedMultiplier = 1.5f;
+    [SerializeField] private float slopeSpeedMultiplier = 10f;
     [SerializeField] private float maxSpeed = 10f;
     [SerializeField] private float crouchHeight;
-
-    //Velocity Reset Timer
-    [SerializeField] private float velocityResetTime = 0.5f; //Time of inactivity until resetting the velocity to 0;
-    private float timer = 0;
 
     [SerializeField] private Vector3 finalVelocity;
     private Vector3 angle;
@@ -53,6 +55,9 @@ public class CrouchCrawlTest : MonoBehaviour
 
     [Header("Ramp")]
     public Transform rampTransform;
+    public Transform topOfRamp;
+    public Vector3 directionToRamp;
+    public float angleToRampInDegrees;
 
     private void Awake()
     {
@@ -60,12 +65,14 @@ public class CrouchCrawlTest : MonoBehaviour
         cc = GetComponent<CharacterController>();
         capsuleCollider = GetComponent<CapsuleCollider>();
 
-        isMoving = false;
-        
+        //Make reference to the current physics material friction values
+        savedDynamicFrictionValue = slider.dynamicFriction;
+        savedStaticFrictionValue = slider.staticFriction;
     }
 
     public bool IsCrouching()
     {
+        //If the player's head is below a local height variable, then the player is crouching
         if (VRCamera.transform.localPosition.y < crouchHeight)
         {
             isCrouching = true;
@@ -80,10 +87,24 @@ public class CrouchCrawlTest : MonoBehaviour
     {
         Crawling();
         VelocityReset();
+        CheckMovementVectorDirection();
+
+        if (isMoving)
+        {
+            //friction on the ramp is reduced
+            slider.dynamicFriction = 0f;
+            slider.staticFriction = 0f;
+        }
+        else
+        {
+            slider.dynamicFriction = savedDynamicFrictionValue;
+            slider.staticFriction = savedStaticFrictionValue;
+        }
     }
 
     private void Crawling()
     {
+        //If the player is crouching and presses a grip button, calculate the vector with that hand
         if (IsCrouching() & SteamVR_Input.GetState("GrabGrip", SteamVR_Input_Sources.RightHand, true))
         {
             StartCoroutine(CalculateNewPlayerPosition(rightHand));
@@ -96,32 +117,56 @@ public class CrouchCrawlTest : MonoBehaviour
 
     private IEnumerator CalculateNewPlayerPosition(GameObject hand)
     {
+        //Save the position of the hand
         Vector3 initialHandPosition = hand.transform.position;
 
         //Wait until next frame
         yield return new WaitForFixedUpdate();
 
+        //Save a new position of the hand
         Vector3 newHandPosition = hand.transform.position;
 
+        //Get the difference between these two positions
         Vector3 diff = newHandPosition - initialHandPosition;
 
+        //Create a final velocity with this difference on the X and Z only
         finalVelocity = new Vector3(-diff.x, 0, -diff.z);
-
-        timer = 0;
-        isMoving = true;
     }
 
     private void VelocityReset()
     {
-        timer += Time.deltaTime;
-        
+        //If the player is holding either the left or right grip button, then the player is moving
+        if (SteamVR_Input.GetState("GrabGrip", SteamVR_Input_Sources.RightHand, true) || SteamVR_Input.GetState("GrabGrip", SteamVR_Input_Sources.LeftHand, true))
+            isMoving = true;
 
-        if (timer > velocityResetTime)
+        else //else the player is not moving and velocities should be reset to zero
         {
+            isMoving = false;
             finalVelocity = Vector3.zero;
             playerRB.velocity = Vector3.zero;
-            isMoving = false;
         }
+    }
+    
+    void CheckMovementVectorDirection()
+    {
+        //check whether the new finalvelocity is headed up or down a slope
+        if (isMoving)
+        {
+
+        }
+
+        Vector3 normalizedVelocity = new Vector3(finalVelocity.x, finalVelocity.y, finalVelocity.z).normalized;
+
+        directionToRamp = topOfRamp.position - normalizedVelocity;
+
+        //return an angle, angle towards the ramp
+        //atan2
+        angleToRampInDegrees = Mathf.Atan2(directionToRamp.z, directionToRamp.x) * Mathf.Rad2Deg;
+
+
+        //what angles
+        //if dragging away the angle would be 0?
+        //and if dragging towards would the angle be 180?
     }
 
     private void FixedUpdate()
@@ -139,25 +184,27 @@ public class CrouchCrawlTest : MonoBehaviour
         finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
         finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
 
+        //Normalize the magnitude if it is too large
+        if (finalVelocity.magnitude > 1.0f)
+            finalVelocity.Normalize();
 
-        playerRB.velocity = finalVelocity * speedMultiplier;
+        //playerRB.velocity = finalVelocity * speedMultiplier;
 
+        //create local vector from ramp slope
+        if (groundSlopeAngle > 20)
+        {
+            //finalVelocity = rampTransform.TransformVector(finalVelocity);
 
-        ////create local vector from ramp slope
-        //if (groundSlopeAngle > 20)
-        //{
-        //    finalVelocity = rampTransform.TransformVector(finalVelocity);
+            //finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
+            //finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
 
-        //    finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
-        //    finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
+            playerRB.velocity += finalVelocity * slopeSpeedMultiplier;
+        }
+        else
+        {
+            playerRB.velocity += finalVelocity * speedMultiplier;
 
-        //    playerRB.velocity = finalVelocity * speedMultiplier;
-        //}
-        //else
-        //{
-        //    playerRB.velocity = finalVelocity * speedMultiplier;
-
-        //}
+        }
     }
 
     /// <summary>
