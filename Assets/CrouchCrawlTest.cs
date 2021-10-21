@@ -13,6 +13,12 @@ public class CrouchCrawlTest : MonoBehaviour
     [SerializeField] private GameObject rightHand;
     [SerializeField] private GameObject leftHand;
 
+    //UI Object reference
+    [SerializeField] private DisplayCurrentState UICanvas;
+
+    //Teleport Areas
+    [SerializeField] private TeleportArea[] teleportAreas;
+
     //Ramp friction material
     [SerializeField] private PhysicMaterial slider;
     private float savedDynamicFrictionValue;
@@ -53,12 +59,6 @@ public class CrouchCrawlTest : MonoBehaviour
 
     public bool isMoving;
 
-    [Header("Ramp")]
-    public Transform rampTransform;
-    public Transform topOfRamp;
-    public Vector3 directionToRamp;
-    public float angleToRampInDegrees;
-
     private void Awake()
     {
         playerRB = GetComponent<Rigidbody>();
@@ -72,22 +72,26 @@ public class CrouchCrawlTest : MonoBehaviour
 
     public bool IsCrouching()
     {
-        //If the player's head is below a local height variable, then the player is crouching
-        if (VRCamera.transform.localPosition.y < crouchHeight)
-        {
-            isCrouching = true;
-            return true;
-        }
+        ////If the player's head is below a local height variable, then the player is crouching
+        //if (VRCamera.transform.localPosition.y < crouchHeight)
+        //{
+        //    isCrouching = true;
+        //    return true;
+        //}
 
-        isCrouching = false;
-        return false;
+        //isCrouching = false;
+        //return false;
+
+        if (isCrouching)
+            return true;
+        else
+            return false;
     }
 
     private void Update()
     {
         Crawling();
         VelocityReset();
-        CheckMovementVectorDirection();
 
         if (isMoving)
         {
@@ -97,8 +101,37 @@ public class CrouchCrawlTest : MonoBehaviour
         }
         else
         {
+            //If the player is not moving, reset the physics material to its previous value
             slider.dynamicFriction = savedDynamicFrictionValue;
             slider.staticFriction = savedStaticFrictionValue;
+        }
+
+        //If the trigger is pressed on either controller
+        if(SteamVR_Input.GetStateDown("InteractUI", SteamVR_Input_Sources.RightHand, true) || SteamVR_Input.GetStateDown("InteractUI", SteamVR_Input_Sources.LeftHand, true))
+        {
+            isCrouching = !isCrouching;
+
+            if (isCrouching)
+            {
+                UICanvas.UpdateState("Crouching");
+
+                for (int i = 0; i < teleportAreas.Length; i++)
+                {
+                    teleportAreas[i].locked = true;
+                }
+            }
+            else
+            {
+                UICanvas.UpdateState("Standing");
+
+                for (int i = 0; i < teleportAreas.Length; i++)
+                {
+                    teleportAreas[i].locked = false;
+
+                }
+            }
+                
+
         }
     }
 
@@ -147,28 +180,6 @@ public class CrouchCrawlTest : MonoBehaviour
         }
     }
     
-    void CheckMovementVectorDirection()
-    {
-        //check whether the new finalvelocity is headed up or down a slope
-        if (isMoving)
-        {
-
-        }
-
-        Vector3 normalizedVelocity = new Vector3(finalVelocity.x, finalVelocity.y, finalVelocity.z).normalized;
-
-        directionToRamp = topOfRamp.position - normalizedVelocity;
-
-        //return an angle, angle towards the ramp
-        //atan2
-        angleToRampInDegrees = Mathf.Atan2(directionToRamp.z, directionToRamp.x) * Mathf.Rad2Deg;
-
-
-        //what angles
-        //if dragging away the angle would be 0?
-        //and if dragging towards would the angle be 180?
-    }
-
     private void FixedUpdate()
     {
         CheckGround(new Vector3(transform.position.x, transform.position.y - (capsuleCollider.height / 2) + 
@@ -188,22 +199,13 @@ public class CrouchCrawlTest : MonoBehaviour
         if (finalVelocity.magnitude > 1.0f)
             finalVelocity.Normalize();
 
-        //playerRB.velocity = finalVelocity * speedMultiplier;
-
-        //create local vector from ramp slope
         if (groundSlopeAngle > 20)
         {
-            //finalVelocity = rampTransform.TransformVector(finalVelocity);
-
-            //finalVelocity.x = Mathf.Clamp(finalVelocity.x, -maxSpeed, maxSpeed);
-            //finalVelocity.z = Mathf.Clamp(finalVelocity.z, -maxSpeed, maxSpeed);
-
             playerRB.velocity += finalVelocity * slopeSpeedMultiplier;
         }
         else
         {
             playerRB.velocity += finalVelocity * speedMultiplier;
-
         }
     }
 
