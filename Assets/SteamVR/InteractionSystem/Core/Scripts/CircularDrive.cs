@@ -105,6 +105,8 @@ namespace Valve.VR.InteractionSystem
 
         private Interactable interactable;
 
+        protected Hand.AttachmentFlags attachmentFlags = Hand.AttachmentFlags.DetachFromOtherHand;
+
 		//-------------------------------------------------
 		private void Freeze( Hand hand )
 		{
@@ -245,6 +247,12 @@ namespace Valve.VR.InteractionSystem
             GrabTypes startingGrabType = hand.GetGrabStarting();
             bool isGrabEnding = hand.IsGrabbingWithType(grabbedWithType) == false;
 
+            if(gameObject.name == "Door_Knob" && interactable.attachedToHand == null && startingGrabType != GrabTypes.None)
+            {
+                hand.AttachObject(gameObject, startingGrabType, attachmentFlags);
+            }
+
+
             if (grabbedWithType == GrabTypes.None && startingGrabType != GrabTypes.None)
             {
                 grabbedWithType = startingGrabType;
@@ -283,6 +291,14 @@ namespace Valve.VR.InteractionSystem
 				UpdateAll();
 			}
 		}
+
+        protected virtual void HandAttachedUpdate(Hand hand)
+        {
+            if (hand.IsGrabEnding(this.gameObject))
+            {
+                hand.DetachObject(gameObject);
+            }
+        }
 
 
 		//-------------------------------------------------
